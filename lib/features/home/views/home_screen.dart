@@ -6,6 +6,7 @@ import 'package:sca_shopper/shared/colors.dart';
 import 'package:sca_shopper/shared/constants.dart';
 
 import '../../../repository/api_repository.dart';
+import '../../../shared/custom_list_tile.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,7 +132,68 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 future: apiRepo.fetchCategories(),
-              )
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Text(
+                "All Products",
+                style: style.copyWith(
+                  fontSize: 20,
+                  color: AppColors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              FutureBuilder(
+                builder: (_, snapshot) {
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    // setState(() {
+                    //   isLoading = true;
+                    // });
+                    return const Center(
+                        child: CircularProgressIndicator(
+                          valueColor:
+                          AlwaysStoppedAnimation(AppColors.appColor),
+                        ));
+                  } else if (snapshot.hasError) {
+                    return const Center(
+                        child: Text("Could not fetch categories"));
+                  } else if (snapshot.data?.error != null) {
+                    return Center(
+                      child: Text(snapshot.data?.error ??
+                          "Could not fetch categories"),
+                    );
+                  }
+                  // setState(() {
+                  //   isLoading = false;
+                  // });
+                  return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (_, i) {
+                        final each = snapshot.data?.products?[i];
+
+                        return CustomListTile(
+                          ontap: () {
+                            AppRouter.push(
+                                AppRouteStrings.productDetailsScreen,
+                                arg: each);
+                          },
+                          image: each?.images?.firstOrNull ?? "",
+                          text: each?.title ?? "",
+                        );
+                      },
+                      separatorBuilder: (_, __) => const Divider(
+                        height: 0,
+                      ),
+                      itemCount: snapshot.data?.products?.length ?? 0);
+                },
+                future: apiRepo.fetchProducts(),
+              ),
             ],
           ),
         ));
